@@ -8,6 +8,7 @@ module Mailkube
 
     private
 
+    def parse_url: (String) -> URI::Generic
     def build_request: (String, URI::Generic, Hash[String, String], String?) -> untyped
     def to_response: (untyped) -> HttpResponse
   end

@@ -1,8 +1,12 @@
+# NOTE: no `target-branch`. Dependabot then opens PRs against the repository's DEFAULT branch,
+# which is `main` — the branch `.releaserc.json` releases from and the one CI gates. An earlier
+# revision pinned `target-branch: "develop"`, a branch this repo has never had: Dependabot resolves
+# that at run time, finds nothing, and silently opens no PRs at all. The failure mode is silence,
+# not an error, so it reads exactly like "no updates available".
 version: 2
 updates:
   - package-ecosystem: "bundler"
     directory: "/"
-    target-branch: "develop"
     schedule:
       interval: "weekly"
     commit-message:
@@ -13,7 +17,6 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "develop"
     schedule:
       interval: "weekly"
     commit-message:

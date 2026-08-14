@@ -48,7 +48,16 @@ module Mailkube
     #
     # @param filters [Hash{Symbol => Object}] the caller's filters, nils included.
     # @return [Hash{String => String}] the query parameters.
-    def self.query(filters) = filters.compact.to_h { |name, value| [name.to_s, query_value(value)] }
+    #
+    # Accumulated into an annotated hash rather than returned from `to_h { [k, v] }`, because Steep
+    # infers a two-element array literal in block-body position as `Array[String]`, not as the
+    # `[String, String]` tuple `to_h`'s signature demands, and reports a `BlockBodyTypeMismatch`
+    # that no annotation on the block can settle.
+    def self.query(filters)
+      rendered = {} #: Hash[String, String]
+      filters.compact.each { |name, value| rendered[name.to_s] = query_value(value) }
+      rendered
+    end
 
     # Escape one interpolated path segment.
     #

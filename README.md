@@ -156,6 +156,11 @@ rescue Mailkube::APIError => e
 end
 ```
 
+**Quote `request_id` when you report a failure.** Every API response carries an `X-Request-Id`, and
+a mapped `APIError` exposes it. It is the only value that lets support find your exact call in the
+server-side logs, so include it verbatim in the ticket. Setting `MAILKUBE_LOG=debug` also writes it
+on the response line, which is what makes a failure traceable from your own logs.
+
 Categories: `BadRequestError` (400), `AuthenticationError` (403), `NotFoundError` (404),
 `ConflictError` (409), `InvalidRequestError` (422), `RateLimitError` (429), `ServerError` (5xx),
 and `APIError` for anything else, which is also the parent of all of them. A transport failure
@@ -237,8 +242,16 @@ Mailkube.enable_logging                          # $stderr
 Mailkube.enable_logging(device: Rails.logger)    # or your own
 ```
 
-Or set `MAILKUBE_LOG` to any non-empty value. The `Authorization` and `Idempotency-Key` headers are
-redacted from every line.
+Or set `MAILKUBE_LOG`. It holds a **level**, not an on/off flag, exactly as in the python, node, Go
+and PHP SDKs: `MAILKUBE_LOG=debug` (or `trace`, or `all`) turns the SDK on, and anything more
+selective silences it — `MAILKUBE_LOG=warning` is a working way to say "logs, but not from the
+SDK". This SDK emits one class of record, the request/response trace, and that record is
+debug-level. An unrecognized value leaves logging off rather than raising, because this is read at
+`require` time.
+
+The `Authorization` and `Idempotency-Key` headers are redacted from every line, and no recipient
+address, subject or body is ever written. The response line carries the server's request id when
+one was sent.
 
 This is a duck-typed sink rather than a stdlib `Logger` on purpose: `logger` stopped being a
 default gem in Ruby 4.0, so requiring it here would break the zero-dependency claim — and a library

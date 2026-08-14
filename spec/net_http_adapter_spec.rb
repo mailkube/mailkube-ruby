@@ -22,6 +22,26 @@ RSpec.describe Mailkube::NetHttpAdapter do
       .to raise_error(Mailkube::ConfigurationError, /no host/)
   end
 
+  # `rescue Mailkube::Error` is the documented way to catch everything this gem raises, so a
+  # `URI::InvalidURIError` escaping from here would make that promise false. Every other thing this
+  # adapter refuses already raises ConfigurationError; this was the one that did not.
+  it "wraps a malformed URL in its own error rather than leaking URI's" do
+    expect { adapter.call(method: "POST", url: "http://[", headers: {}) }
+      .to raise_error(Mailkube::ConfigurationError, /invalid URL/)
+  end
+
+  # The timeout is a public constructor argument, and an argument that is stored but never read is
+  # indistinguishable from one that works until you need it. Asserting it reaches `Net::HTTP.start`
+  # is what stops it going quietly dead in a refactor.
+  it "applies the configured timeout to the connection it opens" do
+    opened = nil
+    allow(Net::HTTP).to receive(:start) { |*_args, **options| opened = options }
+
+    described_class.new(timeout: 7).call(method: "GET", url: "https://example.test/x", headers: {})
+
+    expect(opened).to include(open_timeout: 7, read_timeout: 7)
+  end
+
   it "is frozen, like every other collaborator the client wires up" do
     expect(adapter).to be_frozen
   end

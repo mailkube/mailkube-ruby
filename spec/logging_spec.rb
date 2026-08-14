@@ -50,6 +50,33 @@ RSpec.describe Mailkube::Logging do
 
       expect(sink.string).to be_empty
     end
+
+    it "never writes a recipient address, a subject or a body" do
+      Mailkube.enable_logging(device: sink)
+      client, = client_with
+      client.emails.send(from: "Acme <hello@acme.test>", to: "customer@example.com",
+                         subject: "Your receipt", html: "<p>Account balance: 42</p>")
+
+      expect(sink.string).not_to include("customer@example.com")
+      expect(sink.string).not_to include("Your receipt")
+      expect(sink.string).not_to include("Account balance")
+    end
+
+    it "records the request id, so a customer's own logs can be matched to the server's" do
+      Mailkube.enable_logging(device: sink)
+      client, = client_with(headers: { "x-request-id" => "req_traceable" })
+      client.emails.send(**minimal_send)
+
+      expect(sink.string).to include("req_traceable")
+    end
+
+    it "omits the request id rather than writing an empty one when the response carried none" do
+      Mailkube.enable_logging(device: sink)
+      client, = client_with
+      client.emails.send(**minimal_send)
+
+      expect(sink.string).not_to include("request_id=")
+    end
   end
 
   describe "redaction" do
@@ -72,6 +99,9 @@ RSpec.describe Mailkube::Logging do
     end
   end
 
+  # MAILKUBE_LOG holds a LEVEL in every mailkube SDK, so presence alone must not turn logging on.
+  # Treating it as a flag is not a cosmetic divergence: an operator who sets MAILKUBE_LOG=warning
+  # across a fleet is asking for less output and would get the SDK's debug trace instead.
   describe "turning itself on from the environment" do
     it "stays off when MAILKUBE_LOG is unset" do
       expect(described_class.enable_from_env({})).to be_nil
@@ -82,9 +112,23 @@ RSpec.describe Mailkube::Logging do
       expect(described_class.enable_from_env({ "MAILKUBE_LOG" => "" })).to be_nil
     end
 
-    it "turns on for any non-empty value, because there is only one class of record to filter" do
-      expect(described_class.enable_from_env({ "MAILKUBE_LOG" => "debug" })).not_to be_nil
-      expect(described_class.device).not_to be_nil
+    ["debug", "trace", "all", "DEBUG", "  debug  "].each do |level|
+      it "turns on for MAILKUBE_LOG=#{level.inspect}, a level that admits debug records" do
+        expect(described_class.enable_from_env({ "MAILKUBE_LOG" => level })).not_to be_nil
+        expect(described_class.device).not_to be_nil
+      end
+    end
+
+    %w[warning warn error fatal info notice 1 true yes].each do |level|
+      it "stays silent for MAILKUBE_LOG=#{level}, which is more selective than debug" do
+        expect(described_class.enable_from_env({ "MAILKUBE_LOG" => level })).to be_nil
+        expect(described_class.device).to be_nil
+      end
+    end
+
+    it "leaves logging off for an unrecognized level rather than raising at require time" do
+      expect { described_class.enable_from_env({ "MAILKUBE_LOG" => "nonsense" }) }.not_to raise_error
+      expect(described_class.device).to be_nil
     end
   end
 end

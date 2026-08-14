@@ -35,15 +35,31 @@ jobs:
       - name: Specs + coverage (line and branch, 90%)
         run: bundle exec rspec
 
+      # Publish-readiness, on every PR rather than for the first time in the release runner.
+      # `gem build` is the only thing that validates the gemspec end to end: a metadata key
+      # RubyGems rejects, a `spec.files` glob that matches nothing, or a `require_relative` that
+      # cannot resolve are all build-time failures. `publishCmd` already runs this, but it runs it
+      # *after* semantic-release has pushed the tag, so a gemspec defect there leaves a tag with no
+      # gem behind it. `--strict` promotes the warnings (a missing summary, a bad licence
+      # identifier) to failures.
+      - name: Gem is publishable (gem build --strict)
+        run: gem build --strict mailkube.gemspec
+
   forward-compat:
     # The gem must also work on the newest Ruby, and that is a different claim from "the tooling
     # works there". Only the specs run here.
     #
-    # `BUNDLE_WITHOUT` is load-bearing, not hygiene: `bundler-cache: true` runs a full
-    # `bundle install` *before* any step below, and `Gemfile.lock` is gitignored so it resolves
-    # fresh. `steep 2.0.0` resolves `strscan 3.1.8`, whose C extension does not compile against
-    # Ruby 4.0 headers and has no precompiled linux platform — so without this the job dies at
-    # dependency install, long before it reaches rspec.
+    # `BUNDLE_WITHOUT` keeps the *claim* clean, and it is worth stating why, because it is easy to
+    # read as hygiene and drop. `bundler-cache: true` runs a full `bundle install` before any step
+    # here, and `Gemfile.lock` is gitignored so it resolves fresh every run. Without this, that
+    # install also builds `rubocop`, `rbs` and `steep` — pinned to exact versions, and pinned for
+    # the floor. A dev gem that failed to install on the newest Ruby would then turn this job red
+    # while saying nothing about the library, which is the one thing the job exists to test.
+    #
+    # It is a scoping choice, not a workaround: as of Ruby 4.0.6 the whole development group does
+    # install and `bundle exec rake` passes there. An earlier revision of this comment claimed
+    # `strscan` could not compile against Ruby 4.0 headers; that was a local toolchain artefact,
+    # written up in CONTRIBUTING.md under "check your compiler's target".
     runs-on: ubuntu-latest
     env:
       BUNDLE_WITHOUT: development

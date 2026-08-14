@@ -68,3 +68,10 @@ RSpec/NestedGroups:
 
 Layout/LineLength:
   Max: 120
+
+# `#: Hash[String, String]` is an RBS inline annotation, not a malformed comment. Steep needs it on
+# every empty-collection literal it cannot infer (`Ruby::UnannotatedEmptyCollection`), so without
+# this the two gates contradict each other: satisfying Steep fails RuboCop, and writing `# :` to
+# satisfy RuboCop stops Steep reading the annotation at all.
+Layout/LeadingCommentSpace:
+  AllowRBSInlineAnnotation: true

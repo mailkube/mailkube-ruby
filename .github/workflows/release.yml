@@ -15,6 +15,12 @@ name: Release
 # To arm it, once CI is green on `main` and the pending trusted publisher is registered
 # (org + repo + `release.yml` + the `release` environment): delete `workflow_dispatch` below,
 # restore the two `push` lines, and push. That push cuts 1.0.0 over OIDC.
+#
+# One companion edit is required at the same time: delete the `push: branches: [main]` trigger from
+# ci.yml. While this workflow is inert, that trigger is the only thing testing `main`; the moment it
+# is armed, ci-gate below runs the same workflow through `workflow_call` and the two collide in the
+# shared `ci-${{ github.ref }}` concurrency group, cancelling one run and reddening the CI badge.
+# Every other SDK has already dropped that trigger for exactly this reason.
 on:
   workflow_dispatch:
   # push:
@@ -33,9 +39,16 @@ jobs:
     needs: ci-gate
     runs-on: ubuntu-latest
     environment: release
+    # A job-level `permissions:` block REPLACES the defaults rather than adding to them, so every
+    # scope semantic-release needs has to be listed. `@semantic-release/github` runs with its
+    # defaults on: after the tag is pushed it comments on the resolved PRs and issues
+    # (successComment) and adds the `released` label. Without the last two scopes that 403s, and it
+    # 403s *after* the tag exists and the gem is pushed — a red run on a release that shipped.
     permissions:
       contents: write # push the tag, create the GitHub Release
       id-token: write # OIDC token for RubyGems trusted publishing
+      issues: write # @semantic-release/github comments on resolved issues
+      pull-requests: write # ...and on resolved PRs, and applies the `released` label
     steps:
       - uses: actions/checkout@v7
         with:

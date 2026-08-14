@@ -105,7 +105,7 @@ module Mailkube
     def self.normalize_headers(headers)
       # Iterated with a block rather than collected through `each.to_h`, because a mapping is only
       # required to yield — it is not required to hand back an Enumerator when called bare.
-      normalized = {}
+      normalized = {} #: Hash[String, String]
       headers.each { |name, value| normalized[canonical_header(name)] = value.to_s }
       normalized
     end

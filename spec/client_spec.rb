@@ -46,6 +46,21 @@ RSpec.describe Mailkube::Client do
       expect(headers["User-Agent"]).to eq("mailkube-ruby/#{Mailkube::VERSION}")
     end
 
+    # The example above cannot fail on a malformed version: it interpolates the same constant the
+    # code does, so `mailkube-ruby/vX.Y.Z` would satisfy it. The contract's row is
+    # `mailkube-<lang>/<version>`, and the release path is exactly where a `v` could creep in —
+    # `tagFormat` is `v${version}`, so a release step that took the version from the git tag rather
+    # than from `${nextRelease.version}` would ship one. Asserting on the shape, not the value, is
+    # what makes that structurally impossible.
+    it "reports a bare version, with no `v` prefix, whatever the release path writes" do
+      client, adapter = client_with
+      client.emails.send(**minimal_send)
+
+      user_agent = adapter.calls.first[:headers]["User-Agent"]
+      expect(user_agent).to start_with("mailkube-ruby/")
+      expect(user_agent.delete_prefix("mailkube-ruby/")).to match(/\A\d/)
+    end
+
     it "reports the same version the gemspec publishes" do
       spec = Gem::Specification.load(File.expand_path("../mailkube.gemspec", __dir__))
 

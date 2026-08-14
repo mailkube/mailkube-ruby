@@ -67,7 +67,7 @@ module Mailkube
     # @return [HttpResponse] the response.
     # @raise [ConnectionError] when the request produced no response.
     def call(method:, url:, headers:, body: nil)
-      uri = URI.parse(url)
+      uri = parse_url(url)
       # `Config#build_url` only ever produces a URL with a host, but this adapter is public and
       # can be driven directly, so the guard is real rather than defensive noise.
       host = uri.hostname
@@ -84,6 +84,24 @@ module Mailkube
     end
 
     private
+
+    # Parse the URL, keeping `URI`'s own exception out of the caller's rescue clauses.
+    #
+    # Everything this adapter can refuse already raises {ConfigurationError} — an unsupported verb,
+    # a URL with no host — and a malformed URL was the one case where a foreign type escaped
+    # instead. `rescue Mailkube::Error` is the documented way to catch anything this gem raises,
+    # so a bare `URI::InvalidURIError` reaching a caller made that promise false. The adapter is
+    # public and can be driven directly, so this is reachable without going through
+    # {Config#build_url}, which already maps the same two exceptions the same way.
+    #
+    # @param url [String] the URL to parse.
+    # @return [URI::Generic] the parsed URL.
+    # @raise [ConfigurationError] when the URL cannot be parsed.
+    def parse_url(url)
+      URI.parse(url)
+    rescue URI::InvalidURIError, URI::InvalidComponentError => e
+      raise ConfigurationError, "invalid URL #{url.inspect}: #{e.message}"
+    end
 
     # @return [Net::HTTPRequest] the request object for a method, URL, headers and body.
     def build_request(method, uri, headers, body)

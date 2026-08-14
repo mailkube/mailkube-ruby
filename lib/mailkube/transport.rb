@@ -22,20 +22,35 @@ module Mailkube
 
   # One HTTP response, in the shape every adapter returns.
   #
-  # `headers` are keyed by **downcased** name, because HTTP header names are case-insensitive and
-  # every adapter would otherwise pick its own casing.
+  # `headers` are stored exactly as the adapter supplied them, and read through {#header}, which
+  # matches case-insensitively as HTTP requires.
   #
   # Unlike the rest of this file, this class **is** public: it is the return type of the `http:`
   # adapter contract, so any adapter you write has to construct one.
   class HttpResponse < Data.define(:status, :headers, :body)
     # @param status [Integer] the HTTP status code.
-    # @param headers [Hash{String => String}] response headers, keys downcased.
+    # @param headers [Hash{String => String}] response headers, in any casing.
     # @param body [String] the raw response body.
     def initialize(status:, headers: {}, body: "") = super
 
+    # Look a header up, case-insensitively.
+    #
+    # Both sides are downcased, rather than downcasing the argument and indexing a map assumed to
+    # be lowercase already. That assumption used to be this class's documented contract, and since
+    # the class is **public** — the `http:` seam means third-party adapters construct it — it was
+    # an invariant the SDK asked for and could not enforce. An adapter that passed `X-Request-Id`
+    # through in the server's own casing produced a silent nil for every header the SDK reads,
+    # which is exactly how the request id could have stayed empty even after the gateway started
+    # sending it. A scan over a handful of pairs costs nothing and cannot be got wrong from
+    # outside.
+    #
     # @param name [String] a header name in any casing.
     # @return [String, nil] the header value, or nil when absent.
-    def header(name) = headers[name.downcase]
+    def header(name)
+      wanted = name.downcase
+      headers.each { |key, value| return value if key.downcase == wanted }
+      nil
+    end
   end
 
   # Performs one HTTP round trip and turns the result into a model or a mapped error.
@@ -125,7 +140,7 @@ module Mailkube
         headers: headers,
         body: spec.body.nil? ? nil : JSON.generate(spec.body)
       )
-      Logging.response(response.status, url)
+      Logging.response(response.status, url, response.header("X-Request-Id"))
       return response if (200..299).cover?(response.status)
 
       raise error_for(response)

@@ -21,9 +21,19 @@ pre-commit install                            # rubocop + steep + jscpd hooks
 pre-commit install --hook-type commit-msg     # Conventional Commits hook
 ```
 
-**Run the gates on Ruby 3.4, the supported floor.** The pinned tooling is not guaranteed to build
-against a newer Ruby: `steep 2.0.0` resolves `strscan 3.1.8`, whose C extension does not compile
-against Ruby 4.0 headers. That is why CI runs the full gate set on 3.4 and only the specs on 4.0.
+**Run the gates on Ruby 3.4, the supported floor.** The tooling is pinned exactly and is not
+guaranteed to build against a newer Ruby, so a gate failing on a newer one is a property of your
+machine rather than of this repo. That split is why CI runs the full gate set on 3.4 and only the
+specs on 4.0 — the second job tests the *library* on the newest Ruby, which is a different claim
+from "the pinned tooling works there".
+
+If a gem's C extension will not build at all, check your compiler's target before anything else:
+`ruby -rrbconfig -e 'p RbConfig::CONFIG["ARCH_FLAG"]'` against `cc -dumpmachine`. An x86_64 Ruby
+with an empty `ARCH_FLAG` on an arm64 machine lets clang default to the wrong architecture, every
+`mkmf` `have_func` probe then fails to *link* rather than to compile, and the extension falls back
+to redeclaring functions the headers already declare. It surfaces as `static declaration of
+'<something>' follows non-static declaration`, which reads like a Ruby-version incompatibility and
+is not one.
 
 ## Quality gates
 

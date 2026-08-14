@@ -35,9 +35,10 @@ npx --yes jscpd@4 --config .jscpd.json .       # duplication (DRY) gate
 Steep + jscpd + commitlint hooks in one shot.
 
 **Run the gates on Ruby 3.4, the supported floor.** The tooling is pinned exactly and is not
-guaranteed to build against a newer Ruby — `steep 2.0.0` resolves `strscan 3.1.8`, whose C extension
-does not compile against Ruby 4.0 headers. CI therefore runs the full gate set on 3.4 and only the
-specs on 4.0, which is also what proves the gem itself works on both.
+guaranteed to build against a newer Ruby; a gate that will not build on a newer one is a property of
+your machine rather than of this repo. CI therefore runs the full gate set on 3.4 and only the specs
+on 4.0, which is also what proves the gem itself works on both. See
+[CONTRIBUTING.md](../CONTRIBUTING.md) before blaming a failed C-extension build on the Ruby version.
 
 ## SOLID, concretely (paradigm-neutral guidance)
 
