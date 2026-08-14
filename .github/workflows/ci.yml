@@ -2,7 +2,14 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # `develop` only, and `main` is absent on purpose. `develop` is the integration branch and is
+    # pushed to directly, so without this trigger a direct push would run nothing — `pull_request`
+    # alone does not cover it. `main` is covered instead by release.yml, which runs this whole
+    # workflow through `workflow_call` as its `ci-gate` job before releasing. Adding `main` here
+    # would put that gate run and a standalone push run in the same `ci-${{ github.ref }}`
+    # concurrency group, where one is cancelled — and the cancelled one is what the README's CI
+    # badge reports.
+    branches: [develop]
   pull_request:
   workflow_call: # so release.yml can gate on the full CI
 

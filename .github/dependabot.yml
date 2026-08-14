@@ -1,12 +1,16 @@
-# NOTE: no `target-branch`. Dependabot then opens PRs against the repository's DEFAULT branch,
-# which is `main` — the branch `.releaserc.json` releases from and the one CI gates. An earlier
-# revision pinned `target-branch: "develop"`, a branch this repo has never had: Dependabot resolves
-# that at run time, finds nothing, and silently opens no PRs at all. The failure mode is silence,
-# not an error, so it reads exactly like "no updates available".
+# `target-branch` must name a branch that actually exists. Dependabot resolves it at run time and,
+# when it does not resolve, opens no PRs at all — no error, no warning, just silence that reads
+# exactly like "no updates available". So it stays in step with the branching model: `develop` is
+# the integration branch, and dependency bumps belong there rather than landing on `main`, which is
+# the release branch (`.releaserc.json` releases from `main` only).
+#
+# Both ecosystems must carry it. A `target-branch` on one and not the other is the same failure
+# split in half: half the updates queue up on the wrong branch.
 version: 2
 updates:
   - package-ecosystem: "bundler"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
     commit-message:
@@ -17,6 +21,7 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
     commit-message:

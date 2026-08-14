@@ -5,26 +5,22 @@ name: Release
 #
 # NOTHING is committed back to `main`. See .rules/RELEASE.md.
 #
-# ─── INERT UNTIL 1.0.0 IS READY TO CUT ────────────────────────────────────────────────────────
-# The `push: branches: [main]` trigger is commented out on purpose. Until the gem name is claimed
-# by a *pending* trusted publisher on rubygems.org, every push to `main` would fire a release that
-# gets as far as `gem push` and then fails — and semantic-release pushes the tag *before* the
-# publish plugins run, so the failed run leaves a `vX.Y.Z` tag behind with no GitHub Release. The
-# Releases page is this repo's changelog, so that entry would be lost permanently.
+# ARMED. Every push to `main` — in practice, every merge of a `develop` pull request — runs the
+# full CI gate and then releases if, and only if, the commits since the last tag warrant one.
+# `chore`, `docs`, `ci`, `refactor` and `test` release nothing, so a merge that carries none of
+# `feat`/`fix`/`perf` finishes green having published nothing. That is the intended steady state.
 #
-# To arm it, once CI is green on `main` and the pending trusted publisher is registered
-# (org + repo + `release.yml` + the `release` environment): delete `workflow_dispatch` below,
-# restore the two `push` lines, and push. That push cuts 1.0.0 over OIDC.
+# There is deliberately no `workflow_dispatch`. A release is a consequence of what was merged, not
+# a button: a manual run would compute a version from whatever `main` happened to hold and could
+# cut a release nobody asked for. To release, merge something releasable.
 #
-# One companion edit is required at the same time: delete the `push: branches: [main]` trigger from
-# ci.yml. While this workflow is inert, that trigger is the only thing testing `main`; the moment it
-# is armed, ci-gate below runs the same workflow through `workflow_call` and the two collide in the
-# shared `ci-${{ github.ref }}` concurrency group, cancelling one run and reddening the CI badge.
-# Every other SDK has already dropped that trigger for exactly this reason.
+# `main` is intentionally absent from ci.yml's `push.branches` (it lists `develop` only). The
+# `ci-gate` job below runs that same workflow through `workflow_call`, and a standalone push run
+# would land in its `ci-${{ github.ref }}` concurrency group and be cancelled — and a cancelled run
+# is what the README's CI badge would then report. Do not add `main` back there.
 on:
-  workflow_dispatch:
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
 
 concurrency:
   group: release-${{ github.ref }}
