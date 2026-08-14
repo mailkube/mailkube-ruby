@@ -1,0 +1,30 @@
+module Mailkube
+  class CanceledScheduledEmail
+    attr_reader id: String
+    attr_reader object: String
+    attr_reader status: String
+
+    def initialize: (id: String, ?object: String, ?status: String) -> void
+    def self.from: (Hash[String, untyped]) -> CanceledScheduledEmail
+  end
+
+  class ScheduledEmailBatchCancel
+    attr_reader object: String
+    attr_reader batch_id: String
+    attr_reader canceled_count: Integer
+
+    def initialize: (?object: String, ?batch_id: String, ?canceled_count: Integer) -> void
+    def self.from: (Hash[String, untyped]) -> ScheduledEmailBatchCancel
+  end
+
+  class ScheduledEmailBatchUpdate
+    attr_reader object: String
+    attr_reader batch_id: String
+    attr_reader rescheduled_count: Integer
+    attr_reader scheduled_at: String?
+
+    def initialize: (?object: String, ?batch_id: String, ?rescheduled_count: Integer,
+                     ?scheduled_at: String?) -> void
+    def self.from: (Hash[String, untyped]) -> ScheduledEmailBatchUpdate
+  end
+end

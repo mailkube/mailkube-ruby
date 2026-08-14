@@ -1,0 +1,54 @@
+module Mailkube
+  module Events
+    class SentData < MessageContext
+      def sent: () -> DeliveryContext
+    end
+
+    class DeliveredData < MessageContext
+      def delivery: () -> DeliveryContext
+    end
+
+    class BouncedData < MessageContext
+      def bounce: () -> FailureContext
+    end
+
+    class DelayedData < MessageContext
+      def delay: () -> FailureContext
+    end
+
+    class SuppressedData < MessageContext
+      def suppression: () -> SuppressionContext
+    end
+
+    class ScheduledData < MessageContext
+      def scheduled: () -> ScheduledContext
+    end
+
+    class FailedData < MessageContext
+      def failed: () -> SendFailureContext
+    end
+
+    class OpenedData < MessageContext
+      def open: () -> EngagementContext
+    end
+
+    class ClickedData < MessageContext
+      def click: () -> ClickContext
+    end
+
+    class DomainStatusData < Node
+      def domain: () -> String
+      def status: () -> String
+      def onboarding_state: () -> String
+      def previous: () -> DomainStatusPrevious
+    end
+
+    class WebhookStatusData < Node
+      def endpoint_url: () -> String
+      def active?: () -> bool
+      def deleted?: () -> bool
+      def disabled_reason: () -> String
+      def previous: () -> WebhookStatusPrevious
+    end
+  end
+end

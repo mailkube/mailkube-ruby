@@ -1,0 +1,60 @@
+module Mailkube
+  module Events
+    # `data` is declared per concrete subclass rather than on `Event`, which is what lets
+    # `UnknownEvent#data` return a raw Hash without conflicting with a typed sibling.
+    #
+    # There is no `id`: the delivery id travels in the `X-Webhook-Id` header.
+    class Event < Node
+      def type: () -> String
+      def created_at: () -> String
+    end
+
+    class EmailSentEvent < Event
+      def data: () -> SentData
+    end
+
+    class EmailDeliveredEvent < Event
+      def data: () -> DeliveredData
+    end
+
+    class EmailBouncedEvent < Event
+      def data: () -> BouncedData
+    end
+
+    class EmailDeliveryDelayedEvent < Event
+      def data: () -> DelayedData
+    end
+
+    class EmailSuppressedEvent < Event
+      def data: () -> SuppressedData
+    end
+
+    class EmailScheduledEvent < Event
+      def data: () -> ScheduledData
+    end
+
+    class EmailFailedEvent < Event
+      def data: () -> FailedData
+    end
+
+    class EmailOpenedEvent < Event
+      def data: () -> OpenedData
+    end
+
+    class EmailClickedEvent < Event
+      def data: () -> ClickedData
+    end
+
+    class DomainStatusEvent < Event
+      def data: () -> DomainStatusData
+    end
+
+    class WebhookStatusEvent < Event
+      def data: () -> WebhookStatusData
+    end
+
+    class UnknownEvent < Event
+      def data: () -> Hash[String, untyped]
+    end
+  end
+end

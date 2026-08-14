@@ -1,0 +1,36 @@
+# Signatures for the gem's public surface.
+#
+# These are checked two ways, and both are needed:
+#   `rbs validate` proves the signatures are internally coherent (every type they name exists).
+#   `steep check`  proves the implementation matches them.
+# `rbs validate` alone never loads `lib/`, so it would happily pass a `sig/` describing methods
+# that do not exist, which is the exact drift this directory is here to prevent.
+module Mailkube
+  VERSION: String
+  DEFAULT_BASE_URL: String
+
+  # What an HTTP adapter must respond to. `Client.new(http:)` accepts anything matching this.
+  interface _HttpAdapter
+    def call: (method: String, url: String, headers: Hash[String, String], ?body: String?) -> HttpResponse
+  end
+
+  # What a resource needs of its transport: the one verb it calls, and nothing else.
+  interface _SendTransport
+    def send_email: (RequestSpec) -> Email
+  end
+
+  # What a resource needs when the answer is a model rather than a send acknowledgement.
+  #
+  # As narrow as `_SendTransport`, and a separate interface rather than a widening of it, so the
+  # emails resource never acquires a dependency on a verb it does not call. It performs the request
+  # and hands back the decoded object; naming the model is the resource's job — which is also why
+  # this needs no generics, of which Ruby has none.
+  interface _JsonTransport
+    def request_json: (RequestSpec) -> Hash[String, untyped]
+  end
+
+  def self.new: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?http: _HttpAdapter?) -> Client
+  def self.error_class_for: (Integer) -> Class
+
+  STATUS_ERRORS: Hash[Integer, Class]
+end

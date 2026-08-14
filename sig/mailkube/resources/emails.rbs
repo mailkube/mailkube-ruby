@@ -1,0 +1,18 @@
+module Mailkube
+  module Resources
+    class Emails
+      def initialize: (_SendTransport) -> void
+
+      def send: (from: String, to: (String | Array[String]), subject: String, ?html: String?, ?text: String?,
+                 ?cc: Array[String]?, ?bcc: Array[String]?, ?reply_to: (String | Array[String])?,
+                 ?headers: Hash[String, String]?, ?attachments: Array[Attachment]?, ?tags: Array[Tag]?,
+                 ?template_id: String?, ?template_version: String?, ?variables: Hash[String, untyped]?,
+                 ?topic: String?, ?idempotency_key: String?, ?scheduled_at: (Time | String)?,
+                 ?batch_id: String?) -> Email
+
+      private
+
+      def idempotency: (String?) -> Hash[String, String]
+    end
+  end
+end

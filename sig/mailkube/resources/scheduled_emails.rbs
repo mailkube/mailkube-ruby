@@ -1,0 +1,32 @@
+module Mailkube
+  module Resources
+    class ScheduledEmailBatches
+      def initialize: (_JsonTransport) -> void
+      def update: (String, scheduled_at: (Time | String)) -> ScheduledEmailBatchUpdate
+      def cancel: (String) -> ScheduledEmailBatchCancel
+    end
+
+    class ScheduledEmails
+      attr_reader batches: ScheduledEmailBatches
+
+      def initialize: (_JsonTransport) -> void
+
+      def list: (?status: (String | Array[String])?, ?batch_id: String?,
+                 ?scheduled_at_gte: (Time | String)?, ?scheduled_at_lte: (Time | String)?,
+                 ?page: Integer?) -> ScheduledEmailPage
+
+      # A lazy `Enumerator`, so abandoning the walk early costs nothing.
+      def iter_all: (?status: (String | Array[String])?, ?batch_id: String?,
+                     ?scheduled_at_gte: (Time | String)?, ?scheduled_at_lte: (Time | String)?,
+                     ?page: Integer?) -> Enumerator[ScheduledEmail, void]
+
+      def get: (String) -> ScheduledEmail
+      def update: (String, scheduled_at: (Time | String), ?batch_id: String?) -> ScheduledEmail
+      def cancel: (String) -> CanceledScheduledEmail
+
+      private
+
+      def fetch_page: (RequestSpec) -> ScheduledEmailPage
+    end
+  end
+end

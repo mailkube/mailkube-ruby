@@ -1,0 +1,25 @@
+module Mailkube
+  # Anything a caller may point SDK logging at. The seam is `#write` rather than a stdlib `Logger`
+  # because `logger` is a bundled gem from Ruby 4.0 and this gem has no runtime dependencies.
+  interface _LogDevice
+    def write: (String) -> untyped
+  end
+
+  module Logging
+    ENV_LEVEL: String
+    SENSITIVE_HEADERS: Array[String]
+    REDACTION: String
+
+    self.@device: _LogDevice?
+
+    def self.device: () -> _LogDevice?
+    def self.enable!: (?device: _LogDevice) -> _LogDevice
+    def self.disable!: () -> nil
+    def self.enable_from_env: (?Hash[String, String]) -> _LogDevice?
+    def self.redact: (Hash[String, String]) -> Hash[String, String]
+    def self.request: (String, String, Hash[String, String]) -> void
+    def self.response: (Integer, String) -> void
+  end
+
+  def self.enable_logging: (?device: _LogDevice) -> _LogDevice
+end

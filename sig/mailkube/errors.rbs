@@ -1,0 +1,78 @@
+module Mailkube
+  class Error < StandardError
+  end
+
+  class ConfigurationError < Error
+  end
+
+  class ConnectionError < Error
+  end
+
+  class SignatureVerificationError < Error
+  end
+
+  class APIError < Error
+    attr_reader error_name: String
+    attr_reader status_code: Integer
+    attr_reader body: Hash[String, untyped]
+    attr_reader retry_after: Integer?
+    attr_reader request_id: String?
+
+    def initialize: (?String?, ?error_name: String, ?status_code: Integer, ?body: Hash[String, untyped],
+                     ?retry_after: Integer?, ?request_id: String?) -> void
+  end
+
+  class BadRequestError < APIError
+  end
+
+  class AuthenticationError < APIError
+  end
+
+  class NotFoundError < APIError
+  end
+
+  class ConflictError < APIError
+  end
+
+  class InvalidRequestError < APIError
+  end
+
+  class RateLimitError < APIError
+  end
+
+  class ServerError < APIError
+  end
+
+  module ErrorName
+    APPLICATION_ERROR: String
+    BODY_CONTENT_REJECTED: String
+    BROWSER_NOT_ALLOWED: String
+    CONCURRENT_IDEMPOTENT_REQUESTS: String
+    FROM_DOMAIN_NOT_ALLOWED: String
+    INVALID_API_KEY: String
+    INVALID_ATTACHMENT: String
+    INVALID_FROM_ADDRESS: String
+    INVALID_IDEMPOTENCY_KEY: String
+    INVALID_IDEMPOTENT_REQUEST: String
+    INVALID_REQUEST_BODY: String
+    LINK_REPUTATION_BLOCKED: String
+    MAX_MESSAGE_SIZE_EXCEEDED: String
+    MAX_RECIPIENTS_EXCEEDED: String
+    METHOD_NOT_ALLOWED: String
+    MISSING_REQUIRED_FIELD: String
+    MISSING_REQUIRED_VARIABLE: String
+    MISSING_USER_AGENT: String
+    NOT_ACCEPTABLE: String
+    QUOTA_EXCEEDED: String
+    RATE_LIMIT_EXCEEDED: String
+    SCHEDULED_EMAIL_NOT_FOUND: String
+    SCHEDULED_EMAIL_NOT_PENDING: String
+    SCHEDULING_NOT_INCLUDED: String
+    TEMPLATE_NOT_FOUND: String
+    TEMPLATE_NOT_PUBLISHED: String
+    TOPIC_DISABLED: String
+    TOPIC_NOT_FOUND: String
+    UNSUPPORTED_MEDIA_TYPE: String
+    VALIDATION_ERROR: String
+  end
+end

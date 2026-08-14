@@ -1,0 +1,11 @@
+module Mailkube
+  module Serialization
+    def self.to_iso: ((Time | String)?) -> String?
+    def self.query_value: (untyped) -> String
+    def self.query_scalar: (untyped) -> String
+    def self.query: (Hash[Symbol, untyped]) -> Hash[String, String]
+    def self.escape_segment: (String) -> String
+    def self.encode_attachments: (Array[Attachment]?) -> Array[Hash[String, untyped]]?
+    def self.encode_tags: (Array[Tag]?) -> Array[Hash[String, untyped]]?
+  end
+end

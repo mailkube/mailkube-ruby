@@ -1,0 +1,44 @@
+module Mailkube
+  # Response and parameter models.
+  #
+  # Two shapes matter here, and both were arrived at by testing Steep 2.0.0 rather than guessing.
+  #
+  # In `lib/`, each model is `class X < Data.define(...)`, not `X = Data.define(...) do ... end`.
+  # Steep attributes the block form's methods to the enclosing module rather than to the constant,
+  # and then cannot resolve the generated readers from inside them.
+  #
+  # Here, each is declared as a plain `class X` and **does not name `::Data` as its superclass**.
+  # Inheriting `::Data` in the signature brings its own untyped `new` along, which shadows the
+  # keyword-argument `initialize` below, and every call site then fails with "unexpected keyword
+  # argument".
+  #
+  # The generated readers are declared as `attr_reader`; `Ruby::MethodDefinitionMissing` stays off
+  # in the Steepfile because Steep cannot see their implementations.
+  class Attachment
+    attr_reader filename: String
+    attr_reader content: String
+    attr_reader content_type: String?
+
+    def initialize: (filename: String, content: String, ?content_type: String?) -> void
+  end
+
+  class Tag
+    attr_reader name: String
+    attr_reader value: String
+
+    def initialize: (name: String, ?value: String) -> void
+  end
+
+  class Email
+    attr_reader id: String
+    attr_reader message_id: String?
+    attr_reader idempotent_replayed: bool
+    attr_reader status: String?
+    attr_reader scheduled_at: String?
+    attr_reader batch_id: String?
+
+    def initialize: (id: String, ?message_id: String?, ?idempotent_replayed: bool, ?status: String?,
+                     ?scheduled_at: String?, ?batch_id: String?) -> void
+    def scheduled?: () -> bool
+  end
+end

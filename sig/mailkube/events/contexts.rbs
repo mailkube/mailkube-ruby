@@ -1,0 +1,60 @@
+module Mailkube
+  module Events
+    class MessageContext < Node
+      def email_id: () -> String
+      def created_at: () -> String
+      def domain: () -> String?
+      def subject: () -> String?
+      def to: () -> Array[String]?
+      def from: () -> String?
+      # Plain hashes, not `Mailkube::Tag`: a `Data` would drop an unknown key inside a tag.
+      def tags: () -> Array[Hash[String, untyped]]
+    end
+
+    class DeliveryContext < Node
+      def recipient: () -> String
+      def timestamp: () -> String
+    end
+
+    class FailureContext < DeliveryContext
+      def code: () -> Integer
+      def reason: () -> String
+    end
+
+    class EngagementContext < Node
+      def ip_address: () -> String
+      def user_agent: () -> String
+      def timestamp: () -> String
+    end
+
+    class ClickContext < EngagementContext
+      def link: () -> String
+    end
+
+    class SuppressionContext < Node
+      def recipients: () -> Array[String]
+      def timestamp: () -> String
+    end
+
+    class ScheduledContext < Node
+      def scheduled_at: () -> String
+      def batch_id: () -> String?
+    end
+
+    class SendFailureContext < Node
+      def reason: () -> String
+      def timestamp: () -> String
+    end
+
+    class DomainStatusPrevious < Node
+      def status: () -> String
+      def onboarding_state: () -> String
+    end
+
+    class WebhookStatusPrevious < Node
+      def active?: () -> bool
+      def deleted?: () -> bool
+      def disabled_reason: () -> String
+    end
+  end
+end

@@ -1,0 +1,19 @@
+module Mailkube
+  module Resources
+    module ScheduledEmailRequests
+      COLLECTION: String
+      BATCHES: String
+
+      def self.item: (String, String, String, ?Hash[String, untyped]?) -> RequestSpec
+      def self.list: (?status: (String | Array[String])?, ?batch_id: String?,
+                      ?scheduled_at_gte: (Time | String)?, ?scheduled_at_lte: (Time | String)?,
+                      ?page: Integer?) -> RequestSpec
+      def self.page: (String) -> RequestSpec
+      def self.get: (String) -> RequestSpec
+      def self.update: (String, Hash[String, untyped]) -> RequestSpec
+      def self.cancel: (String) -> RequestSpec
+      def self.batch_update: (String, Hash[String, untyped]) -> RequestSpec
+      def self.batch_cancel: (String) -> RequestSpec
+    end
+  end
+end

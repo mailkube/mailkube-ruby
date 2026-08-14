@@ -1,0 +1,6 @@
+module Mailkube
+  module Events
+    # The catalogue. The known-type set is `REGISTRY.keys`; there is no parallel list.
+    REGISTRY: Hash[String, singleton(Event)]
+  end
+end

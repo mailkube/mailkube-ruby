@@ -1,0 +1,53 @@
+module Mailkube
+  # Declared the same way as every other model — see `sig/mailkube/types.rbs` for why these are
+  # plain classes that do not name `::Data` as a superclass.
+  class ScheduledEmail
+    attr_reader id: String
+    attr_reader message_id: String?
+    attr_reader object: String
+    attr_reader status: String
+    attr_reader scheduled_at: String?
+    attr_reader created_at: String?
+    attr_reader batch_id: String?
+    attr_reader subject: String?
+    attr_reader recipients: String?
+    attr_reader topic: String?
+    attr_reader tags: Array[Hash[String, untyped]]
+
+    def initialize: (id: String, ?message_id: String?, ?object: String, ?status: String,
+                     ?scheduled_at: String?, ?created_at: String?, ?batch_id: String?,
+                     ?subject: String?, ?recipients: String?, ?topic: String?,
+                     ?tags: Array[Hash[String, untyped]]) -> void
+    def self.from: (Hash[String, untyped]) -> ScheduledEmail
+  end
+
+  class PageSteps
+    # Declared as `def` rather than `attr_reader` only because `next` is a Ruby keyword: RBS's own
+    # core signatures spell this member `def next:` and use no keyword-named `attr_reader`
+    # anywhere. `previous` keeps the house form. Both are `Data.define` readers, and
+    # `MethodDefinitionMissing` is off in the Steepfile for exactly that reason.
+    def next: () -> String?
+    attr_reader previous: String?
+
+    def initialize: (?next: String?, ?previous: String?) -> void
+    def self.from: (Hash[String, untyped]?) -> PageSteps
+  end
+
+  class Pagination
+    attr_reader steps: PageSteps
+    attr_reader total_count: Integer
+    attr_reader current_page: Integer
+
+    def initialize: (?steps: PageSteps, ?total_count: Integer, ?current_page: Integer) -> void
+    def self.from: (Hash[String, untyped]?) -> Pagination
+  end
+
+  class ScheduledEmailPage
+    attr_reader pagination: Pagination
+    attr_reader data: Array[ScheduledEmail]
+
+    def initialize: (?pagination: Pagination, ?data: Array[ScheduledEmail]) -> void
+    def self.from: (Hash[String, untyped]) -> ScheduledEmailPage
+    def more?: () -> bool
+  end
+end

@@ -1,0 +1,14 @@
+module Mailkube
+  class Config
+    ENV_API_KEY: String
+    ENV_BASE_URL: String
+    DEFAULT_TIMEOUT: Integer
+
+    attr_reader base_url: String
+    attr_reader timeout: Numeric
+
+    def initialize: (?api_key: String?, ?base_url: String?, ?timeout: Numeric) -> void
+    def default_headers: () -> Hash[String, String]
+    def build_url: (String, ?Hash[String, String]) -> String
+  end
+end

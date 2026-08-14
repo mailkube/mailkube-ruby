@@ -1,0 +1,32 @@
+module Mailkube
+  module Events
+    # Event models are the one place this gem does **not** use `Data.define`.
+    #
+    # The contract inverts the response-model rule for webhooks: unknown fields are preserved, not
+    # dropped, at every depth. A `Data` has fixed members and drops them, so the decoded hash is
+    # the state instead, and each subclass declares one-line readers over it.
+    #
+    # Those readers are real `def`s, so they are declared here as `def` — `attr_reader` in these
+    # signatures is reserved for the readers `Data.define` actually generates (see
+    # `sig/mailkube/types.rbs`).
+    class Node
+      @raw: Hash[String, untyped]
+
+      attr_reader raw: Hash[String, untyped]
+
+      def initialize: (Hash[String, untyped]) -> void
+      def []: (String) -> untyped
+      def to_h: () -> Hash[String, untyped]
+      def ==: (untyped) -> bool
+      def eql?: (untyped) -> bool
+      def hash: () -> Integer
+
+      private
+
+      # Deliberately `untyped` rather than a bounded generic: Ruby has no generics, and every
+      # caller is a one-line reader that already declares its own concrete return type — which is
+      # where the type belongs.
+      def block: (untyped, String) -> untyped
+    end
+  end
+end

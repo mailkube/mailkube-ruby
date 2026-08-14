@@ -1,0 +1,23 @@
+# Build output
+/pkg/
+/vendor/bundle/
+*.gem
+
+# Coverage
+/coverage/
+
+# Tooling caches
+.jscpd/
+.steep/
+.rubocop-cache/
+
+# Bundler resolves the lockfile per application; a gem does not ship one.
+Gemfile.lock
+
+# Local Bundler config. Never commit this: a stray `BUNDLE_WITHOUT: development` here makes CI
+# skip rubocop, rbs and steep and still report green, because `bundle exec <gate>` reports the
+# gem as "not currently included in the bundle" rather than failing the job.
+/.bundle/
+
+# Secrets / local config
+.env

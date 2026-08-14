@@ -1,0 +1,14 @@
+module Mailkube
+  class NetHttpAdapter
+    METHODS: Hash[String, untyped]
+    TRANSPORT_ERRORS: Array[untyped]
+
+    def initialize: (?timeout: Numeric) -> void
+    def call: (method: String, url: String, headers: Hash[String, String], ?body: String?) -> HttpResponse
+
+    private
+
+    def build_request: (String, URI::Generic, Hash[String, String], String?) -> untyped
+    def to_response: (untyped) -> HttpResponse
+  end
+end

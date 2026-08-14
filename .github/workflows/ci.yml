@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call: # so release.yml can gate on the full CI
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    # The floor, and the only place the gates run. Every dev gem is pinned exactly, so running
+    # them on a second Ruby would test the tooling's compatibility rather than this gem's.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: true
+
+      - name: Lint (rubocop — complexity, docs, style)
+        run: bundle exec rubocop
+
+      - name: Signatures are coherent (rbs validate)
+        run: bundle exec rbs -r uri -r time -r openssl -r json -r net-http -r socket -r erb -I sig validate
+
+      - name: Implementation matches the signatures (steep check)
+        run: bundle exec steep check
+
+      - name: Specs + coverage (line and branch, 90%)
+        run: bundle exec rspec
+
+  forward-compat:
+    # The gem must also work on the newest Ruby, and that is a different claim from "the tooling
+    # works there". Only the specs run here.
+    #
+    # `BUNDLE_WITHOUT` is load-bearing, not hygiene: `bundler-cache: true` runs a full
+    # `bundle install` *before* any step below, and `Gemfile.lock` is gitignored so it resolves
+    # fresh. `steep 2.0.0` resolves `strscan 3.1.8`, whose C extension does not compile against
+    # Ruby 4.0 headers and has no precompiled linux platform — so without this the job dies at
+    # dependency install, long before it reaches rspec.
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_WITHOUT: development
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0"
+          bundler-cache: true
+
+      - name: Specs on the newest Ruby
+        run: bundle exec rspec
+
+  dry:
+    # Language-agnostic duplication (DRY) gate — identical across every mailkube repo.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "20"
+      - name: Copy-paste detection (jscpd)
+        run: npx --yes jscpd@4 --config .jscpd.json .
+
+  docs:
+    # Governance gate: every .rules/*.md must be indexed in AGENTS.md.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Rule-index sync check
+        run: ./scripts/check-rule-index.sh

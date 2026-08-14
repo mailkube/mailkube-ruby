@@ -1,0 +1,30 @@
+module Mailkube
+  module Webhooks
+    DEFAULT_TOLERANCE: Integer
+    SIGNATURE_PREFIX: String
+    PARSE_OPTIONS: Hash[Symbol, untyped]
+
+    # `headers` is any mapping that yields name/value pairs, not just a Hash:
+    # `ActionDispatch::Http::Headers` is Enumerable-only and yields CGI env names, and a Rails
+    # receiver passes it straight through from `request.headers`.
+    def self.verify_signature: (payload: String, headers: _HeaderMap, secret: String,
+                                ?tolerance: Integer) -> String
+    def self.parse_event: (String) -> Events::Event
+    def self.verify: (payload: String, headers: _HeaderMap, secret: String,
+                      ?tolerance: Integer) -> Events::Event
+    def self.check_freshness: (String, Integer) -> void
+    def self.check_signature: (String, String, String, String, String) -> void
+    def self.normalize_headers: (_HeaderMap) -> Hash[String, String]
+    def self.canonical_header: (untyped) -> String
+  end
+
+  # The narrowest thing a header mapping has to be: something that yields name/value pairs.
+  #
+  # The block takes a **pair**, matching how RBS declares `Hash#each`, so a plain Hash satisfies
+  # this. Ruby's block destructuring means `{ |name, value| ... }` reads a pair either way, which
+  # is also what lets a mapping that yields two arguments — `ActionDispatch::Http::Headers` — work
+  # at runtime.
+  interface _HeaderMap
+    def each: () { ([untyped, untyped]) -> void } -> void
+  end
+end
