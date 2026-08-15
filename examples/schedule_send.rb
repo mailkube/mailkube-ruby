@@ -16,6 +16,10 @@ recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/schedule_send.rb <recipient@example.com>")
 end
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new
 
 # Must be in the future and within your plan's scheduling horizon. A `Time` is rendered to
@@ -23,7 +27,7 @@ client = Mailkube.new
 due = Time.now.utc + (60 * 60)
 
 email = client.emails.send(
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Your reminder",
   text: "This was scheduled an hour ago.",

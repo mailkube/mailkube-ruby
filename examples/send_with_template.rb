@@ -13,11 +13,15 @@ require_relative "../lib/mailkube"
 recipient = ARGV.fetch(0) { abort("usage: ruby examples/send_with_template.rb <recipient> <template-uuid>") }
 template_id = ARGV.fetch(1) { abort("usage: ruby examples/send_with_template.rb <recipient> <template-uuid>") }
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new
 
 begin
   email = client.emails.send(
-    from: "Acme <hello@yourdomain.com>",
+    from: sender,
     to: recipient,
     subject: "Your order shipped",
     template_id: template_id,

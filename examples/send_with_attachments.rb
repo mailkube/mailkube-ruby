@@ -14,6 +14,10 @@ recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/send_with_attachments.rb <recipient@example.com>")
 end
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new
 
 # `content` is the raw bytes. The SDK base64-encodes them for the wire, so do not encode first.
@@ -25,7 +29,7 @@ report = Mailkube::Attachment.new(
 )
 
 email = client.emails.send(
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Your weekly report",
   text: "The numbers are attached.",

@@ -14,11 +14,15 @@ recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/simple_send.rb <recipient@example.com>")
 end
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new # reads MAILKUBE_API_KEY
 
 begin
   email = client.emails.send(
-    from: "Acme <hello@yourdomain.com>",
+    from: sender,
     to: recipient,
     subject: "Hello from mailkube-ruby",
     html: "<p>It works!</p>",
