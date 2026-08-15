@@ -46,15 +46,13 @@ puts "first  call: #{first.id}"
 replay = client.emails.send(**params)
 puts "replayed   : #{replay.id}"
 
-if first.id != replay.id
-  abort("expected the same id back, got #{first.id} then #{replay.id} — that is a second send")
-end
+abort("expected the same id back, got #{first.id} then #{replay.id} — that is a second send") if first.id != replay.id
 puts "same id returned: the retry was replayed, not resent"
 
 # Same key, different body: refused rather than replayed.
 begin
   client.emails.send(**params.merge(subject: "A different message entirely"))
   abort("expected a reused key with a changed body to be rejected")
-rescue Mailkube::Error => e
+rescue Mailkube::APIError => e
   puts "key reuse with a changed body correctly rejected: #{e.error_name}"
 end

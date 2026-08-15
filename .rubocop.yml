@@ -7,7 +7,12 @@ AllCops:
   SuggestExtensions: false # the extension set is pinned in the Gemfile, not discovered per-run
   Exclude:
     - "vendor/**/*"
-    - "examples/**/*" # runnable documentation, not shipped code (also excluded from jscpd + coverage)
+# `examples/` is deliberately *not* excluded. Every defect the SDK certification run found lived
+# there, because it was the one directory no gate looked at. Examples are read and copied by
+# customers, so they are held to the same style and complexity limits as `lib/`. They stay out of
+# coverage (nothing executes them in CI) and out of the main jscpd run — duplication across
+# examples is measured separately by `.jscpd.examples.json`, which allows the shared
+# scaffolding every example needs while still catching a copy-pasted file.
 
 # ── KISS: the house complexity limits ─────────────────────────────────────────
 # These are the gates. RuboCop's own defaults are stricter than the org limit of 10, which would

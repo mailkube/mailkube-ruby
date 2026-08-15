@@ -47,7 +47,7 @@ begin
     topic: "no-such-topic"
   )
   abort("expected an unknown topic to be rejected, but it was accepted")
-rescue Mailkube::Error => e
+rescue Mailkube::APIError => e
   raise unless e.error_name == Mailkube::ErrorName::TOPIC_NOT_FOUND
 
   puts "unknown topic correctly rejected: #{e.error_name}"

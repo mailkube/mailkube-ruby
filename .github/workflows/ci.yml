@@ -81,6 +81,27 @@ jobs:
       - name: Specs on the newest Ruby
         run: bundle exec rspec
 
+  examples:
+    # `examples/` is runnable documentation, and customers copy it. Nothing in CI executes it —
+    # that would need live credentials — so this is the floor: every example must at least parse.
+    # RuboCop (in `test`) covers style and complexity; this catches what a linter cannot, a file
+    # that is not valid Ruby at all.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+          bundler-cache: false # syntax checking needs no gems
+      - name: Examples parse (ruby -c)
+        # `|| exit 1` is load-bearing: a bare `for … done` reports only the LAST iteration's
+        # status, so without it a broken file anywhere but the end would pass silently.
+        # The count assertion is the other half — a glob that matched nothing would also pass.
+        run: |
+          n=$(ls examples/*.rb | wc -l)
+          test "$n" -ge 14 || { echo "expected >=14 examples, found $n"; exit 1; }
+          for f in examples/*.rb; do ruby -c "$f" || exit 1; done
+
   dry:
     # Language-agnostic duplication (DRY) gate — identical across every mailkube repo.
     runs-on: ubuntu-latest
@@ -91,6 +112,13 @@ jobs:
           node-version: "20"
       - name: Copy-paste detection (jscpd)
         run: npx --yes jscpd@4 --config .jscpd.json .
+      # Examples are excluded from the run above and measured here instead, at a higher
+      # minTokens. Every example repeats the same scaffolding — require, read MAILKUBE_FROM,
+      # construct the client — and deduping that into a shared helper would defeat the point of a
+      # file you can read top to bottom and paste into your own project. 100 tokens is past that
+      # boilerplate (the cliff is at 90) while still catching a genuinely copy-pasted example.
+      - name: Copy-paste detection across examples (jscpd)
+        run: npx --yes jscpd@4 --config .jscpd.examples.json examples/
 
   docs:
     # Governance gate: every .rules/*.md must be indexed in AGENTS.md.

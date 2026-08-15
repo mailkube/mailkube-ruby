@@ -45,11 +45,21 @@ bundle exec rake rbs                          # the signatures are coherent (rbs
 bundle exec steep check                        # the implementation matches them
 bundle exec rspec                              # specs + the 90% line/branch coverage gate
 npx --yes jscpd@4 --config .jscpd.json .       # duplication (DRY) gate, blocks at > 1%
+npx --yes jscpd@4 --config .jscpd.examples.json examples/   # the same gate over examples/
+for f in examples/*.rb; do ruby -c "$f" || exit 1; done     # every example parses
 ./scripts/check-rule-index.sh                  # every .rules/*.md indexed in AGENTS.md
 ```
 
 `bundle exec rake` runs the first four in order. `pre-commit run --all-files` runs the lint/type/jscpd
 hooks in one shot.
+
+**`examples/` is in scope for RuboCop.** It is runnable documentation, which is the reason, not an
+exception to it: customers copy those files. They are held to the same style and complexity limits
+as `lib/`, must parse (`ruby -c`, CI's `examples` job), and are checked for duplication by
+`.jscpd.examples.json` — a separate pass at `minTokens: 100` rather than the main run's 50, because
+every example legitimately repeats the same scaffolding (require, read `MAILKUBE_FROM`, construct
+the client) and extracting that into a shared helper would defeat the point of a file you can read
+top to bottom. Examples stay out of **coverage**: nothing in CI executes them.
 
 **Both halves of the type gate are required.** `rbs validate` never loads `lib/`, so it cannot tell
 you the signatures match the code; `steep check` is what does. Running only the first is how a `sig/`

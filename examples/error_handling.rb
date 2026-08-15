@@ -5,9 +5,11 @@
 #   export MAILKUBE_API_KEY=mk_...
 #   ruby examples/error_handling.rb you@example.com
 #
-# Every failure arrives as a `Mailkube::Error` subclass carrying `error_name` — the server's stable
-# machine-readable name — alongside `status_code`. Branch on `error_name`, never on the
-# human-readable message, which is free to change.
+# Every refusal from the server arrives as a `Mailkube::APIError` subclass carrying `error_name` —
+# the server's stable machine-readable name — alongside `status_code`. Branch on `error_name`,
+# never on the human-readable message, which is free to change. Client-side failures
+# (`ConfigurationError`, `ConnectionError`) are `Mailkube::Error`s without an `error_name`, so
+# rescue `APIError` when you intend to read one.
 #
 # Nothing here sends a message: each call is designed to be refused.
 
@@ -29,10 +31,10 @@ expect = lambda do |label, expected, &check|
   check.call
   warn "BAD  #{label}: expected #{expected}, but the call succeeded"
   failures += 1
-rescue Mailkube::Error => e
+rescue Mailkube::APIError => e
   ok = e.error_name == expected
   failures += 1 unless ok
-  puts "#{ok ? 'ok  ' : 'BAD '} #{label}: #{e.error_name} (#{e.status_code})"
+  puts "#{ok ? "ok  " : "BAD "} #{label}: #{e.error_name} (#{e.status_code})"
 end
 
 # A message with no body at all: html, text and template_id are mutually required-one-of.
@@ -62,7 +64,7 @@ end
 # A bad key is refused identically whether it is malformed, unknown or absent, so nothing about
 # the key space leaks.
 expect.call("bad api key", Mailkube::ErrorName::INVALID_API_KEY) do
-  anonymous = Mailkube.new(api_key: "mk_notarealkey_#{'0' * 64}")
+  anonymous = Mailkube.new(api_key: "mk_notarealkey_#{"0" * 64}")
   anonymous.emails.send(from: sender, to: recipient, subject: "Nope", text: "...")
 end
 
