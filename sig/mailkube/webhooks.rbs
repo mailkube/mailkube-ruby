@@ -12,6 +12,8 @@ module Mailkube
     def self.parse_event: (String) -> Events::Event
     def self.verify: (payload: String, headers: _HeaderMap, secret: String,
                       ?tolerance: Integer) -> Events::Event
+    def self.sign: (id: String, timestamp: String, payload: String, secret: String) -> String
+    def self.signature_hex: (String, String, String, String) -> String
     def self.check_freshness: (String, Integer) -> void
     def self.check_signature: (String, String, String, String, String) -> void
     def self.normalize_headers: (_HeaderMap) -> Hash[String, String]

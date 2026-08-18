@@ -7,8 +7,9 @@ module Mailkube
     attr_reader base_url: String
     attr_reader timeout: Numeric
 
-    def initialize: (?api_key: String?, ?base_url: String?, ?timeout: Numeric) -> void
+    def initialize: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?user_agent_suffix: String?) -> void
     def default_headers: () -> Hash[String, String]
+    def user_agent: () -> String
     def build_url: (String, ?Hash[String, String]) -> String
   end
 end

@@ -46,6 +46,13 @@ Create one client and reuse it.
 | Base URL | `base_url:` | `MAILKUBE_BASE_URL` | `https://api.mailkube.com/mta/v1/` |
 | Timeout | `timeout:` | | 30s |
 | HTTP adapter | `http:` | | `Mailkube::NetHttpAdapter` |
+| User-Agent suffix | `user_agent_suffix:` | | none |
+
+If you are building something on top of this gem — a CLI, an internal service, a framework
+integration — set `user_agent_suffix:` to your own `name/version`. It is appended after this SDK's
+own token, so both are visible: `mailkube-ruby/1.1.0 my-cli/1.0.0`. Surrounding whitespace is
+trimmed, and a value containing CR or LF is **ignored rather than sanitized** — a header value that
+could split the request is not one this gem will send, and quietly repairing it would hide the bug.
 
 Pass your own `http:` adapter — anything responding to
 `#call(method:, url:, headers:, body:)` and returning a `Mailkube::HttpResponse` — to route
@@ -197,6 +204,15 @@ header mapping, including Rack's CGI-env spelling.
 
 `Mailkube::Webhooks.verify_signature` is the signature check alone, if you want to parse yourself.
 `X-Webhook-Id` is stable across retries; deduplicate on it.
+
+`Mailkube::Webhooks.sign` is the mirror, so your own tests can build a valid request without
+reimplementing the HMAC from this page:
+
+```ruby
+signature = Mailkube::Webhooks.sign(
+  id: "wh_1", timestamp: Time.now.utc.iso8601, payload: body, secret: secret
+)
+```
 
 ### Endpoint registration
 

@@ -46,6 +46,32 @@ RSpec.describe Mailkube::Client do
       expect(headers["User-Agent"]).to eq("mailkube-ruby/#{Mailkube::VERSION}")
     end
 
+    it "appends a user-agent suffix after the SDK's own token" do
+      # A wrapping tool gets attribution without hiding which SDK made the call.
+      client, adapter = client_with_user_agent_suffix("my-cli/1.0.0")
+      client.emails.send(**minimal_send)
+
+      expect(adapter.calls.first[:headers]["User-Agent"])
+        .to eq("mailkube-ruby/#{Mailkube::VERSION} my-cli/1.0.0")
+    end
+
+    it "ignores a suffix that is blank or could split the header" do
+      # Dropped rather than cleaned: repairing it would hide the caller's bug.
+      ["", "   ", "cli/1.0\ninjected: yes", "cli/1.0\rinjected: yes"].each do |suffix|
+        client, adapter = client_with_user_agent_suffix(suffix)
+        client.emails.send(**minimal_send)
+
+        expect(adapter.calls.first[:headers]["User-Agent"]).to eq("mailkube-ruby/#{Mailkube::VERSION}")
+      end
+    end
+
+    it "trims surrounding space from a user-agent suffix" do
+      client, adapter = client_with_user_agent_suffix("  my-cli/1.0.0  ")
+      client.emails.send(**minimal_send)
+
+      expect(adapter.calls.first[:headers]["User-Agent"]).to end_with(" my-cli/1.0.0")
+    end
+
     # The example above cannot fail on a malformed version: it interpolates the same constant the
     # code does, so `mailkube-ruby/vX.Y.Z` would satisfy it. The contract's row is
     # `mailkube-<lang>/<version>`, and the release path is exactly where a `v` could creep in —

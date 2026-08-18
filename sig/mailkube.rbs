@@ -29,7 +29,8 @@ module Mailkube
     def request_json: (RequestSpec) -> Hash[String, untyped]
   end
 
-  def self.new: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?http: _HttpAdapter?) -> Client
+  def self.new: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?http: _HttpAdapter?,
+                 ?user_agent_suffix: String?) -> Client
   def self.error_class_for: (Integer) -> Class
 
   STATUS_ERRORS: Hash[Integer, Class]
