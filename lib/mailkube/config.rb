@@ -30,14 +30,20 @@ module Mailkube
     # @param api_key [String, nil] the API key; falls back to `MAILKUBE_API_KEY`.
     # @param base_url [String, nil] the API base URL; falls back to `MAILKUBE_BASE_URL`.
     # @param timeout [Integer, Float] the per-request timeout in seconds.
+    # @param user_agent_suffix [String, nil] a `name/version` token identifying software that
+    #   wraps this SDK, appended after this SDK's own token.
     # @raise [ConfigurationError] when no API key is available.
-    def initialize(api_key: nil, base_url: nil, timeout: DEFAULT_TIMEOUT)
+    def initialize(api_key: nil, base_url: nil, timeout: DEFAULT_TIMEOUT, user_agent_suffix: nil)
       key = api_key || ENV.fetch(ENV_API_KEY, nil)
       raise ConfigurationError, "no API key provided: pass api_key: or set #{ENV_API_KEY}" if key.nil? || key.empty?
 
       @api_key = key
       @base_url = base_url || ENV.fetch(ENV_BASE_URL, nil) || Mailkube::DEFAULT_BASE_URL
       @timeout = timeout
+      suffix = user_agent_suffix.to_s.strip
+      # Dropped rather than sanitized: a header value that could split the request is not one this
+      # gem will send, and silently repairing it hides the caller's bug.
+      @user_agent_suffix = suffix.match?(/[\r\n]/) ? "" : suffix
       freeze
     end
 
@@ -51,10 +57,21 @@ module Mailkube
     def default_headers
       {
         "Authorization" => "Bearer #{@api_key}",
-        "User-Agent" => "mailkube-ruby/#{VERSION}",
+        "User-Agent" => user_agent,
         "Content-Type" => "application/json",
         "Accept" => "application/json"
       }
+    end
+
+    # This gem's token, plus any suffix a wrapping tool supplied.
+    #
+    # The SDK token always leads, so attribution of the SDK itself never depends on what the
+    # wrapper chose to call itself.
+    #
+    # @return [String] the User-Agent value.
+    def user_agent
+      agent = "mailkube-ruby/#{VERSION}"
+      @user_agent_suffix.empty? ? agent : "#{agent} #{@user_agent_suffix}"
     end
 
     # Join a relative path onto the base URL, attach the query, and refuse any absolute URL off

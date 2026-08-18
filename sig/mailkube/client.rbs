@@ -3,7 +3,8 @@ module Mailkube
     attr_reader emails: Resources::Emails
     attr_reader scheduled_emails: Resources::ScheduledEmails
 
-    def initialize: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?http: _HttpAdapter?) -> void
+    def initialize: (?api_key: String?, ?base_url: String?, ?timeout: Numeric, ?http: _HttpAdapter?,
+                     ?user_agent_suffix: String?) -> void
     def base_url: () -> String
   end
 end

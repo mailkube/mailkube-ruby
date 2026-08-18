@@ -14,13 +14,17 @@ recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/send_with_tags.rb <recipient@example.com>")
 end
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new
 
 # The server validates these: names and values are limited to [A-Za-z0-9_-], a name to 16
 # characters and a value to 32, at most 20 tags per send, and names must be unique. A value may
 # be blank.
 email = client.emails.send(
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Welcome aboard",
   html: "<p>Glad you are here.</p>",

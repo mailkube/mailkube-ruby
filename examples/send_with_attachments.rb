@@ -5,14 +5,18 @@
 #   export MAILKUBE_API_KEY=mk_...
 #   ruby examples/send_with_attachments.rb you@example.com
 #
-# Examples are excluded from lint, coverage and the duplication gate: they exist to be read and
-# run, not to be shipped.
+# Examples are linted and parsed in CI like the rest of the gem (they are copied by customers),
+# but nothing executes them, so they stay out of coverage.
 
 require_relative "../lib/mailkube"
 
 recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/send_with_attachments.rb <recipient@example.com>")
 end
+
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
 
 client = Mailkube.new
 
@@ -25,7 +29,7 @@ report = Mailkube::Attachment.new(
 )
 
 email = client.emails.send(
-  from: "Acme <hello@yourdomain.com>",
+  from: sender,
   to: recipient,
   subject: "Your weekly report",
   text: "The numbers are attached.",

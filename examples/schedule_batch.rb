@@ -15,13 +15,17 @@ recipient = ARGV.fetch(0) do
   abort("usage: ruby examples/schedule_batch.rb <recipient@example.com>")
 end
 
+# The verified sender this account may send from. Override per environment; the
+# fallback is a placeholder and will be rejected until you set your own domain.
+sender = ENV.fetch("MAILKUBE_FROM", "Acme <hello@yourdomain.com>")
+
 client = Mailkube.new
 batch_id = "welcome-#{Time.now.to_i}"
 due = Time.now.utc + (60 * 60)
 
 3.times do |index|
   client.emails.send(
-    from: "Acme <hello@yourdomain.com>",
+    from: sender,
     to: recipient,
     subject: "Onboarding step #{index + 1}",
     text: "Step #{index + 1} of 3.",

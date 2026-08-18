@@ -5,7 +5,7 @@ require "time"
 require "json"
 
 module Mailkube
-  # Webhook signature verification.
+  # Webhook signature verification and event parsing.
   #
   # Verification is pure and dependency-free: no client instance, no configuration, so you call
   # it directly inside your webhook handler.
@@ -89,6 +89,39 @@ module Mailkube
       parse_event(verify_signature(payload: payload, headers: headers, secret: secret, tolerance: tolerance))
     end
 
+    # Produce the `X-Webhook-Sig` value for a payload, the mirror of {verify_signature}.
+    #
+    # This exists so anything that produces a delivery — a fixture, a local replay tool, a fake
+    # endpoint in your own suite — computes the signature the way this module verifies it. A
+    # reimplementation from the docs above agrees with its author's reading of the prose rather
+    # than with this SDK, and the two drift silently. Production code verifies; it does not sign.
+    #
+    # Freshness is not this method's concern: it signs the timestamp it is given, so replaying an
+    # old capture reproduces the original signature exactly.
+    #
+    # @param id [String] the `X-Webhook-Id` value.
+    # @param timestamp [String] the `X-Webhook-Ts` value, ISO-8601.
+    # @param payload [String] the raw body that will be sent.
+    # @param secret [String] the endpoint's signing secret.
+    # @return [String] the header value, including the `sha256=` prefix.
+    def self.sign(id:, timestamp:, payload:, secret:)
+      SIGNATURE_PREFIX + signature_hex(id, timestamp, payload, secret)
+    end
+
+    # Return the hex HMAC-SHA256 over the contract's signed input.
+    #
+    # One implementation, so signing and verifying cannot disagree.
+    #
+    # @param id [String] the `X-Webhook-Id` value.
+    # @param timestamp [String] the `X-Webhook-Ts` value.
+    # @param payload [String] the raw body.
+    # @param secret [String] the signing secret.
+    # @return [String] the hex digest, without the prefix.
+    def self.signature_hex(id, timestamp, payload, secret)
+      OpenSSL::HMAC.hexdigest("SHA256", secret, "#{id}.#{timestamp}.#{payload}")
+    end
+    private_class_method :signature_hex
+
     # Normalize a header mapping to lowercase, dashed names.
     #
     # This accepts more than a Hash on purpose. `ActionDispatch::Http::Headers` is `Enumerable`
@@ -139,7 +172,7 @@ module Mailkube
     # @param secret [String] the signing secret.
     # @raise [SignatureVerificationError] when the digests differ.
     def self.check_signature(payload, id, timestamp, signature, secret)
-      expected = OpenSSL::HMAC.hexdigest("SHA256", secret, "#{id}.#{timestamp}.#{payload}")
+      expected = signature_hex(id, timestamp, payload, secret)
       provided = signature.delete_prefix(SIGNATURE_PREFIX)
       # Length is compared first because `fixed_length_secure_compare` raises on a mismatch, and
       # the length of a hex digest is not a secret.

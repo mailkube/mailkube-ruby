@@ -35,9 +35,15 @@ module Mailkube
     # @param http [#call, nil] an HTTP adapter to use instead of the built-in {NetHttpAdapter}.
     #   This is the dependency-inversion seam the test suite injects through; when supplied,
     #   `timeout` is the adapter's business rather than this client's.
+    # @param user_agent_suffix [String, nil] a `name/version` token identifying software that
+    #   wraps this SDK — a CLI, an internal service, a framework integration — appended after
+    #   this SDK's own token so both are visible. A value containing CR or LF is ignored.
     # @raise [ConfigurationError] when no API key is available.
-    def initialize(api_key: nil, base_url: nil, timeout: Config::DEFAULT_TIMEOUT, http: nil)
-      config = Config.new(api_key: api_key, base_url: base_url, timeout: timeout)
+    def initialize(api_key: nil, base_url: nil, timeout: Config::DEFAULT_TIMEOUT, http: nil,
+                   user_agent_suffix: nil)
+      config = Config.new(
+        api_key: api_key, base_url: base_url, timeout: timeout, user_agent_suffix: user_agent_suffix
+      )
       transport = Transport.new(config, http || NetHttpAdapter.new(timeout: timeout))
 
       @config = config

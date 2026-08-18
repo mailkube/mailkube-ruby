@@ -10,6 +10,8 @@ RSpec.describe Mailkube::Webhooks do
   let(:payload) { '{"type":"email.delivered","data":{"id":"abc"}}' }
   let(:id) { "evt_1" }
 
+  # Computes the HMAC directly rather than calling `.sign`: this is the oracle every example
+  # verifies against, so it must not share an implementation with the code under test.
   def headers_for(payload:, id:, timestamp:, secret:)
     digest = OpenSSL::HMAC.hexdigest("SHA256", secret, "#{id}.#{timestamp}.#{payload}")
     { "X-Webhook-Id" => id, "X-Webhook-Ts" => timestamp, "X-Webhook-Sig" => "sha256=#{digest}" }
@@ -89,5 +91,26 @@ RSpec.describe Mailkube::Webhooks do
       expect(rack).not_to respond_to(:transform_keys)
       expect(described_class.verify_signature(payload: payload, headers: rack, secret: secret)).to eq(payload)
     end
+  end
+
+  # The two below tie `.sign` to that oracle from both directions: the value it produces, and the
+  # verifier's acceptance of it.
+
+  it "produces the same signature an independent HMAC does" do
+    timestamp = "2026-01-01T00:00:00Z"
+    expected = headers_for(payload: payload, id: id, timestamp: timestamp, secret: secret)["X-Webhook-Sig"]
+
+    expect(described_class.sign(id: id, timestamp: timestamp, payload: payload, secret: secret)).to eq(expected)
+  end
+
+  it "produces a signature the verifier accepts" do
+    timestamp = Time.now.utc.iso8601
+    headers = {
+      "X-Webhook-Id" => id,
+      "X-Webhook-Ts" => timestamp,
+      "X-Webhook-Sig" => described_class.sign(id: id, timestamp: timestamp, payload: payload, secret: secret)
+    }
+
+    expect(described_class.verify_signature(payload: payload, headers: headers, secret: secret)).to eq(payload)
   end
 end

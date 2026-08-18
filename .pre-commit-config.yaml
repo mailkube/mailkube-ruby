@@ -24,6 +24,13 @@ repos:
         language: system
         types: [ruby]
         pass_filenames: false
+      # The rubocop hook above already covers examples — it reads .rubocop.yml, which no longer
+      # excludes them. This is the syntax floor CI's `examples` job runs, mirrored locally.
+      - id: examples-parse
+        name: examples parse (ruby -c)
+        entry: ruby -c
+        language: system
+        files: ^examples/.*\.rb$
 
   # Language-agnostic DRY gate — identical config in every mailkube repo.
   - repo: local
@@ -31,6 +38,11 @@ repos:
       - id: jscpd
         name: jscpd (copy-paste detector)
         entry: npx --yes jscpd@4 --config .jscpd.json .
+        language: system
+        pass_filenames: false
+      - id: jscpd-examples
+        name: jscpd (examples, higher threshold)
+        entry: npx --yes jscpd@4 --config .jscpd.examples.json examples/
         language: system
         pass_filenames: false
 

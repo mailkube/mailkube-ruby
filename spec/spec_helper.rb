@@ -59,6 +59,16 @@ module SpecHelpers
     [Mailkube::Client.new(api_key: "mk_test", http: adapter), adapter]
   end
 
+  # A client that identifies a wrapping tool, plus the adapter recording what it sent.
+  #
+  # @param suffix [String, nil] the `name/version` token to append to the User-Agent.
+  # @return [Array(Mailkube::Client, StubAdapter)] the client and its adapter.
+  def client_with_user_agent_suffix(suffix)
+    adapter = StubAdapter.new
+    client = Mailkube::Client.new(api_key: "mk_test", http: adapter, user_agent_suffix: suffix)
+    [client, adapter]
+  end
+
   # @return [Hash] the smallest valid set of send parameters.
   def minimal_send = { from: "a@x.com", to: "b@y.com", subject: "Hi" }
 end
