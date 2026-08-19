@@ -11,7 +11,7 @@ gemspec
 # constraint would make the gates a moving target. Bump them deliberately, in their own PR, with
 # the failures fixed in the same change.
 group :development do
-  gem "rake", "13.3.1"
+  gem "rake", "13.4.2"
   gem "rbs", "4.1.3"
   gem "rubocop", "1.89.0"
   gem "rubocop-rspec", "3.10.2"
