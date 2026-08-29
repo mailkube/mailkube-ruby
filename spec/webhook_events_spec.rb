@@ -118,6 +118,15 @@ RSpec.describe "the webhook event catalogue" do
       expect(parse("email.clicked").data.click).to have_attributes(ip_address: "1.2.3.4", link: "https://x/y")
     end
 
+    it "parses an engagement block that omits ipAddress and userAgent" do
+      # The platform stopped recording both, so a current server sends neither key. A released
+      # client must never raise on a payload it has not seen.
+      stripped = WebhookFixtures::MESSAGE.merge("open" => { "timestamp" => "t" })
+      open = parse("email.opened", stripped).data.open
+
+      expect(open).to have_attributes(ip_address: nil, user_agent: nil, timestamp: "t")
+    end
+
     it "reads the snake_case scheduling keys" do
       expect(parse("email.scheduled").data.scheduled).to have_attributes(scheduled_at: "t", batch_id: "b1")
     end

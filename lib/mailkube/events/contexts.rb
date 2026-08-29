@@ -63,9 +63,13 @@ module Mailkube
     # These nested keys are camelCase on the wire, unlike every other block here. The SDK mirrors
     # the server rather than normalizing it.
     class EngagementContext < Node
-      # @return [String] the opening client's IP address (wire key `ipAddress`).
+      # @deprecated The platform no longer records it, so a current server omits the key and this
+      #   returns nil. Kept rather than removed so code written against an earlier version still
+      #   runs, and so an event replayed from an archive still reads.
+      # @return [String, nil] the opening client's IP address (wire key `ipAddress`).
       def ip_address = self["ipAddress"]
-      # @return [String] the opening client's user agent (wire key `userAgent`).
+      # @deprecated As for {#ip_address}.
+      # @return [String, nil] the opening client's user agent (wire key `userAgent`).
       def user_agent = self["userAgent"]
       # @return [String] when the interaction was recorded.
       def timestamp = self["timestamp"]
