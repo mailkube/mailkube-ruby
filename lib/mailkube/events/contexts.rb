@@ -63,10 +63,19 @@ module Mailkube
     # These nested keys are camelCase on the wire, unlike every other block here. The SDK mirrors
     # the server rather than normalizing it.
     class EngagementContext < Node
-      # @return [String] the opening client's IP address (wire key `ipAddress`).
+      # The three connection accessors return nil unless the sending domain elected to record the
+      # field, which is off by default. The server omits the key rather than sending a blank, so
+      # nil here means "the sender did not record this" and never "the sender recorded an empty
+      # value".
+      #
+      # @return [String, nil] the opening client's IP address (wire key `ipAddress`).
       def ip_address = self["ipAddress"]
-      # @return [String] the opening client's user agent (wire key `userAgent`).
+      # @return [String, nil] the opening client's user agent (wire key `userAgent`).
       def user_agent = self["userAgent"]
+      # Elected together with {#ip_address}, but can still be nil when the address was recorded:
+      # it is resolved at the edge and is not available on every path.
+      # @return [String, nil] the two-letter country the address resolves to.
+      def country = self["country"]
       # @return [String] when the interaction was recorded.
       def timestamp = self["timestamp"]
     end

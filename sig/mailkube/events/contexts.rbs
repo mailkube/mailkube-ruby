@@ -22,8 +22,9 @@ module Mailkube
     end
 
     class EngagementContext < Node
-      def ip_address: () -> String
-      def user_agent: () -> String
+      def ip_address: () -> String?
+      def user_agent: () -> String?
+      def country: () -> String?
       def timestamp: () -> String
     end
 
