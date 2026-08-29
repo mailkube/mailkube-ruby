@@ -240,6 +240,12 @@ implement it.
 Every `email.*` payload also carries the message context: `email_id`, `created_at`, `domain`,
 `subject`, `to`, `from` and `tags`.
 
+On the `data.open` and `data.click` blocks, `ip_address`, `country` and `user_agent` are recorded
+only where the sending domain has elected them, and both settings are off by default. The server
+omits the key rather than sending an empty value, so the accessor returns `nil` when it was not
+recorded. `country` can be `nil` even where the address was recorded, because it is resolved at the
+edge and is not available on every path.
+
 Two guarantees hold for every released version, so a platform change never breaks a running
 receiver:
 

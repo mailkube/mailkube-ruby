@@ -118,13 +118,24 @@ RSpec.describe "the webhook event catalogue" do
       expect(parse("email.clicked").data.click).to have_attributes(ip_address: "1.2.3.4", link: "https://x/y")
     end
 
-    it "parses an engagement block that omits ipAddress and userAgent" do
-      # The platform stopped recording both, so a current server sends neither key. A released
-      # client must never raise on a payload it has not seen.
+    it "returns nil for a connection field the sending domain did not elect" do
+      # The three connection fields are elected per domain and off by default, so the server omits
+      # the key rather than sending a blank. nil therefore means "not recorded", never "recorded
+      # empty", and that distinction is the one the election rests on.
       stripped = WebhookFixtures::MESSAGE.merge("open" => { "timestamp" => "t" })
       open = parse("email.opened", stripped).data.open
 
-      expect(open).to have_attributes(ip_address: nil, user_agent: nil, timestamp: "t")
+      expect(open).to have_attributes(ip_address: nil, user_agent: nil, country: nil, timestamp: "t")
+    end
+
+    it "reads an elected country alongside the address" do
+      elected = WebhookFixtures::MESSAGE.merge(
+        "open" => { "timestamp" => "t", "ipAddress" => "1.2.3.4", "country" => "FR" }
+      )
+      open = parse("email.opened", elected).data.open
+
+      # user_agent is elected separately, so it stays nil even though the address was recorded.
+      expect(open).to have_attributes(ip_address: "1.2.3.4", country: "FR", user_agent: nil)
     end
 
     it "reads the snake_case scheduling keys" do
