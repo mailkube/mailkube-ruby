@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   # The version has exactly one source of truth and this reads it. Never write a literal here:
   # a second copy is how a gem ends up reporting a version it is not.
   spec.version = Mailkube::VERSION
-  spec.authors = ["Mailtactic, Corp."]
+  spec.authors = ["Mail Tactic Corporation"]
   spec.summary = "The official Ruby SDK for mailkube"
   # Distinct from the summary on purpose: `gem build` warns when the two are identical, and
   # RubyGems renders them in different places.
