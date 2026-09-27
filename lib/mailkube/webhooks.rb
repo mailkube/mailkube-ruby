@@ -15,8 +15,15 @@ module Mailkube
     # The prefix the server puts before the hex digest in `X-Webhook-Sig`.
     SIGNATURE_PREFIX = "sha256="
     # Decode webhook payloads deep-frozen, so a receiver cannot mutate an event it is about to
-    # forward or log. Passed **positionally** because that is the shape `JSON.parse` declares
-    # (`(source, opts)`); as keywords Steep reports an unexpected keyword.
+    # forward or log. Splatted as **keywords** at the call site, because json 3.0 made every
+    # `JSON.parse` option keyword-only: a positional hash now raises `ArgumentError`, and it is
+    # not coming back (ruby/json#1078 is closed as "not planned" — only `JSON.dump`'s positional
+    # `limit` was restored, in 3.0.1).
+    #
+    # The splat is also the compatible direction, which is why there is no `json` floor in the
+    # gemspec and the gem stays stdlib-only: json 2.x declares `(source, opts = nil)`, and Ruby
+    # collects keywords into the trailing positional Hash for a method that declares none. One
+    # call site, both majors. Verified against json 2.21.2 and 3.0.2 on Ruby 3.4.
     PARSE_OPTIONS = { freeze: true }.freeze
 
     # Verify a webhook's signature and timestamp freshness over the raw body.
@@ -65,7 +72,7 @@ module Mailkube
     # @return [Events::Event] the parsed event; narrow it with `case` or `is_a?`.
     # @raise [Error] when the body is not a JSON object.
     def self.parse_event(payload)
-      body = JSON.parse(payload, PARSE_OPTIONS)
+      body = JSON.parse(payload, **PARSE_OPTIONS)
       raise Error, "webhook payload is not a JSON object" unless body.is_a?(Hash)
 
       Events::REGISTRY.fetch(body["type"], Events::UnknownEvent).new(body)
