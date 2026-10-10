@@ -7,6 +7,8 @@
 
 The official Ruby SDK for [mailkube](https://mailkube.com).
 
+Full product and API documentation: [docs.mailkube.com/sdks/ruby](https://docs.mailkube.com/sdks/ruby).
+
 Requires Ruby 3.4 or newer.
 
 ## Install
