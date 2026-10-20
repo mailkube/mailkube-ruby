@@ -1,0 +1,57 @@
+module Mailkube
+  # Declared the same way as every other model; see `sig/mailkube/types.rbs`.
+  class APIKey
+    attr_reader object: String
+    attr_reader key_id: String
+    attr_reader name: String
+    attr_reader description: String?
+    attr_reader created_at: String
+    attr_reader last_auth_at: String?
+    attr_reader allowed_source_ips: Array[String]
+    attr_reader domain: APIKeyDomain
+    attr_reader organization: APIKeyOrganization
+    attr_reader plan: APIKeyPlan?
+
+    def initialize: (key_id: String, ?object: String, ?name: String, ?description: String?,
+                     ?created_at: String, ?last_auth_at: String?, ?allowed_source_ips: Array[String],
+                     ?domain: APIKeyDomain, ?organization: APIKeyOrganization, ?plan: APIKeyPlan?) -> void
+    def self.from: (Hash[String, untyped]) -> APIKey
+  end
+
+  class APIKeyDomain
+    attr_reader name: String
+
+    def initialize: (?name: String) -> void
+    def self.from: (Hash[String, untyped]?) -> APIKeyDomain
+  end
+
+  class APIKeyOrganization
+    attr_reader name: String
+    # Declared as `def` because `alias` is a keyword, as `PageSteps#next` is.
+    def alias: () -> String
+
+    def initialize: (?name: String, ?alias: String) -> void
+    def self.from: (Hash[String, untyped]?) -> APIKeyOrganization
+  end
+
+  class APIKeyPlan
+    attr_reader code: String
+    attr_reader name: String
+    attr_reader status: String
+    attr_reader quotas: Array[APIKeyQuota]
+
+    def initialize: (?code: String, ?name: String, ?status: String, ?quotas: Array[APIKeyQuota]) -> void
+    def self.from: (Hash[String, untyped]) -> APIKeyPlan
+  end
+
+  class APIKeyQuota
+    attr_reader name: String
+    attr_reader limit: Integer
+    attr_reader used: Integer
+    attr_reader remaining: Integer
+    attr_reader period: String
+
+    def initialize: (?name: String, ?limit: Integer, ?used: Integer, ?remaining: Integer, ?period: String) -> void
+    def self.from: (Hash[String, untyped]) -> APIKeyQuota
+  end
+end

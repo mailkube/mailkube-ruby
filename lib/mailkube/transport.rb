@@ -80,12 +80,14 @@ module Mailkube
     # @param spec [RequestSpec] the request to perform.
     # @return [Email] the accepted-send result.
     # @raise [APIError] on any non-2xx response.
+    # @raise [Error] on a 2xx body without an `id`: a body of the wrong shape is an SDK-level
+    #   failure, not an API error.
     # @raise [ConnectionError] on a transport failure or timeout.
     def send_email(spec)
       response = perform(spec)
       payload = decode(response.body)
       id = payload["id"]
-      raise APIError.new("expected a JSON body with an 'id'", status_code: response.status) unless id.is_a?(String)
+      raise Error, "expected a JSON body with an 'id' from a #{response.status} response" unless id.is_a?(String)
 
       Email.new(
         id: id,
@@ -111,12 +113,14 @@ module Mailkube
     #
     # @param spec [RequestSpec] the request to perform.
     # @return [Hash{String => Object}] the decoded 2xx body.
-    # @raise [APIError] on any non-2xx response, or a 2xx body that is not a JSON object.
+    # @raise [APIError] on any non-2xx response.
+    # @raise [Error] on a 2xx body that is not a JSON object: a body of the wrong shape is an
+    #   SDK-level failure, not an API error.
     # @raise [ConnectionError] on a transport failure or timeout.
     def request_json(spec)
       response = perform(spec)
       payload = decode_object(response.body)
-      raise APIError.new("expected a JSON object body", status_code: response.status) if payload.nil?
+      raise Error, "expected a JSON object body from a #{response.status} response" if payload.nil?
 
       payload
     end

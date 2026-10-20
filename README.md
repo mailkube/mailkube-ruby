@@ -151,6 +151,28 @@ client.scheduled_emails.batches.cancel("welcome-2026-08")
 An unknown batch is a no-op reporting `canceled_count: 0` rather than a 404, so a count of zero is
 not a failure.
 
+## Your API key
+
+`client.credential.info` describes the key the client authenticates with: its domain,
+organization, source-IP allowlist, plan and send-quota usage.
+
+```ruby
+key = client.credential.info
+puts key.key_id, key.domain.name, key.organization.alias
+
+key.plan&.quotas&.each do |quota|
+  puts "#{quota.name}: #{quota.used} of #{quota.limit} in #{quota.period}"
+end
+```
+
+The key is checked exactly as a send checks it, so a key that cannot send raises
+`Mailkube::AuthenticationError` (`invalid_api_key`): calling `info` is how to verify a key. The call
+counts as a use of the key, and plan and quota figures can be up to 30 seconds old. `plan` is nil
+when the organization has no subscription, and a plan without a daily limit lists
+`emails_per_month` only. `remaining` counts recipients, not messages.
+
+The client keeps the key it was constructed with. To use another key, construct another client.
+
 ## Errors
 
 Every error descends from `Mailkube::Error`, so rescue the category you care about:
@@ -173,7 +195,8 @@ on the response line, which is what makes a failure traceable from your own logs
 Categories: `BadRequestError` (400), `AuthenticationError` (403), `NotFoundError` (404),
 `ConflictError` (409), `InvalidRequestError` (422), `RateLimitError` (429), `ServerError` (5xx),
 and `APIError` for anything else, which is also the parent of all of them. A transport failure
-raises `ConnectionError` and is deliberately **not** an API error.
+raises `ConnectionError` and is deliberately **not** an API error. Neither is a 2xx response whose
+body is not the shape the call expects: that raises the base `Mailkube::Error`.
 
 `Mailkube::ErrorName` lists the documented `name` values for discoverability. It is **not** a
 closed set: `error_name` stays a plain String, so a value this release has never heard of is
@@ -297,7 +320,7 @@ response body. If you want pooling, inject an adapter that pools — and make it
 These are covered by semantic versioning:
 
 - `Mailkube.new`, `Mailkube.enable_logging`
-- `client.emails`, `client.scheduled_emails` and their verbs
+- `client.emails`, `client.scheduled_emails`, `client.credential` and their verbs
 - the response models and `Mailkube::Attachment` / `Mailkube::Tag`
 - the error hierarchy and `Mailkube::ErrorName`
 - `Mailkube::Webhooks` and everything under `Mailkube::Events`
@@ -321,10 +344,14 @@ Runnable scripts in [`examples/`](examples/):
 - [`send_with_tags.rb`](examples/send_with_tags.rb) — tag a send for filtering and reporting
 - [`send_with_template.rb`](examples/send_with_template.rb) — send from a saved template
 - [`schedule_send.rb`](examples/schedule_send.rb) — schedule a send, then inspect the ack
+- [`list_scheduled_emails.rb`](examples/list_scheduled_emails.rb) — one page for the metadata,
+  then the lazy walk, read-only
 - [`manage_scheduled_emails.rb`](examples/manage_scheduled_emails.rb) — list, paginate, retrieve,
   reschedule and cancel
 - [`schedule_batch.rb`](examples/schedule_batch.rb) — schedule a batch, then move or cancel it as
   a unit
+- [`credential_info.rb`](examples/credential_info.rb) — describe the calling key, its plan and quota
+  usage
 - [`webhook_receiver_sinatra.rb`](examples/webhook_receiver_sinatra.rb) — verify and dispatch
   webhooks in Sinatra
 - [`webhook_receiver_rails.rb`](examples/webhook_receiver_rails.rb) — the same in Rails, including
