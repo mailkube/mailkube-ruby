@@ -24,7 +24,7 @@ RSpec.describe Mailkube::Transport do
     array_transport = described_class.new(Mailkube::Config.new(api_key: "mk_test"), array_adapter)
 
     expect { array_transport.send_email(Mailkube::RequestSpec.new(path: "emails")) }
-      .to raise_error(Mailkube::APIError, /expected a JSON body with an 'id'/)
+      .to raise_error(Mailkube::Error, /expected a JSON body with an 'id'/) { |error| expect(error).not_to be_a(Mailkube::APIError) }
   end
 
   it "is frozen, like every other collaborator the client wires up" do
@@ -68,7 +68,7 @@ RSpec.describe Mailkube::Transport do
                                             SpecHelpers::StubAdapter.new(body: "[1, 2, 3]"))
 
       expect { array_transport.request_json(Mailkube::RequestSpec.new(path: "x", method: "GET")) }
-        .to raise_error(Mailkube::APIError, /expected a JSON object body/)
+        .to raise_error(Mailkube::Error, /expected a JSON object body/) { |error| expect(error).not_to be_a(Mailkube::APIError) }
     end
 
     it "rejects an empty 2xx body for the same reason" do
@@ -76,7 +76,7 @@ RSpec.describe Mailkube::Transport do
                                             SpecHelpers::StubAdapter.new(body: ""))
 
       expect { empty_transport.request_json(Mailkube::RequestSpec.new(path: "x", method: "GET")) }
-        .to raise_error(Mailkube::APIError, /expected a JSON object body/)
+        .to raise_error(Mailkube::Error, /expected a JSON object body/) { |error| expect(error).not_to be_a(Mailkube::APIError) }
     end
 
     it "maps a non-2xx exactly as the send verb does, because both go through one place" do

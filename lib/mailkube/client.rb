@@ -26,6 +26,8 @@ module Mailkube
     attr_reader :emails
     # @return [Resources::ScheduledEmails] the scheduled-emails namespace.
     attr_reader :scheduled_emails
+    # @return [Resources::Credential] the namespace for the API key this client authenticates with.
+    attr_reader :credential
 
     # Create a client, resolving configuration from the arguments then the environment.
     #
@@ -49,6 +51,7 @@ module Mailkube
       @config = config
       @emails = Resources::Emails.new(transport)
       @scheduled_emails = Resources::ScheduledEmails.new(transport)
+      @credential = Resources::Credential.new(transport)
       freeze
     end
 

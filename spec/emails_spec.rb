@@ -93,7 +93,7 @@ RSpec.describe Mailkube::Resources::Emails do
       client, = client_with(body: {})
 
       expect { client.emails.send(**minimal_send) }
-        .to raise_error(Mailkube::APIError, /expected a JSON body with an 'id'/)
+        .to raise_error(Mailkube::Error, /expected a JSON body with an 'id'/) { |error| expect(error).not_to be_a(Mailkube::APIError) }
     end
   end
 end

@@ -13,12 +13,12 @@ gemspec
 group :development do
   gem "rake", "13.4.2"
   gem "rbs", "4.2.0"
-  gem "rubocop", "1.90.0"
+  gem "rubocop", "1.92.0"
   gem "rubocop-rspec", "3.10.2"
   gem "steep", "2.1.0"
 end
 
 group :test do
   gem "rspec", "3.13.2"
-  gem "simplecov", "1.3.0"
+  gem "simplecov", "1.3.2"
 end
