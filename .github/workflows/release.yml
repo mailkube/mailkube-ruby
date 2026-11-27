@@ -65,7 +65,7 @@ jobs:
       # dirty on purpose and the tag already exists. This step is the OIDC half of what that
       # action does; the gem build and push are semantic-release's `publishCmd`.
       - name: Configure RubyGems credentials (OIDC trusted publishing)
-        uses: rubygems/configure-rubygems-credentials@v2.1.0
+        uses: rubygems/configure-rubygems-credentials@v2.2.0
 
       # One step does everything, and only when the commits actually warrant a release:
       # `prepareCmd` writes version.rb in THIS runner's working copy (never committed —
